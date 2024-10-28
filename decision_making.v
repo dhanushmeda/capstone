@@ -53,7 +53,6 @@ module decision_making #
                 dest_port <= packet_reg[495:480];
                 data_out <= packet_reg[335:0];
                 decision <= packet_reg[335:272] == PNG_SIGNATURE;
-                $display("Decision: %h",decision);
                 cycle_count <= 0;
                 packet_reg<=0;
             end
@@ -70,7 +69,7 @@ module decision_making #
         .port(16'd21)                      
     );
 
-    host #(
+/*    host #(
         .DATA_WIDTH(DATA_WIDTH)
     ) host_inst (
         .clk(clk),
@@ -79,6 +78,6 @@ module decision_making #
         .ip(!decision ? dest_ip : 'bz),    
         .port(!decision ? dest_port : 'bz) 
     );
-
+*/
 endmodule
 
