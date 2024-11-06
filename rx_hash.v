@@ -40,13 +40,16 @@ module rx_hash #
     output wire [31:0]            m_axis_dest_ip,
     output wire [15:0]            m_axis_dest_port,
     
+    input wire load,
+    
     //output to decision making module
     output wire clk_out,
     output wire rst_out,
     output reg [DATA_WIDTH-1:0] data_out,
     output reg [KEEP_WIDTH-1:0] data_keep,
     output reg data_valid,
-    output reg data_last
+    output reg data_last,
+    output wire load_out
 );
 
 localparam CYCLE_COUNT = (38+KEEP_WIDTH-1)/KEEP_WIDTH;
@@ -341,6 +344,7 @@ assign m_axis_dest_port = hash_data_reg[95:87];
 
 assign clk_out = clk;
 assign rst_out = rst;
+assign load_out = load;
 always @ (posedge clk) begin
     data_out <= s_axis_tdata;
     data_keep <= s_axis_tkeep;
@@ -358,6 +362,7 @@ decision_making #(
     .data_keep(data_keep),
     .data_valid(data_valid),
     .data_last(data_last),
+    .load(load_out),
     .data_out() 
              
 );
