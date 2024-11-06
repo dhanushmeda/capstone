@@ -1,3 +1,36 @@
+/*module buffer (
+    input clk,
+    input rst,
+    input [255:0] data,
+    input [31:0] ip,
+    input [15:0] port,
+    output reg [7:0] data_out,
+    output reg istart,
+    output reg ivalid
+);
+
+reg [255:0]data_reg;
+reg [7:0] bit_count;
+
+
+always @ (posedge clk or posedge rst)
+begin
+	if (rst) begin
+		data_reg<=0;
+		bit_count<=0;
+		ivalid<=0;
+		istart<=0;
+	end
+	else begin
+		ivalid<=1;
+		istart<=1;
+		data_reg<=data;
+		data_out<=data_reg[bit_count+7:bit_count];
+		bit_count<=bit_count+7;
+		
+	end
+end*/
+
 module buffer (
     input wire clk,
     input wire rst,
@@ -5,19 +38,19 @@ module buffer (
     input wire shift,           // Signal to shift the data
     input [31:0] ip,
     input [15:0] port,
-    input wire [551:0] data_in, // 336-bit input data
+    input wire [551:0] data_in, // 552-bit input data
     output reg [7:0] data_out,   // 8-bit output data
     input  wire         istart,
     input  wire         ivalid,
-    output reg          iready,
+    output wire          iready,
     //input  wire [ 7:0]  ibyte,
     // image frame configuration output
-    output reg          ostart,
+    output wire          ostart,
     output wire [ 2:0]  colortype, // 0:gray   1:gray+A   2:RGB   3:RGBA   4:RGB-plte
     output wire [13:0]  width,     // image width
     output wire [31:0]  height,    // image height
     // pixel output
-    output reg          ovalid,
+    output wire          ovalid,
     output wire [ 7:0]  opixelr, opixelg, opixelb, opixela
 
     //output reg istart,
@@ -25,7 +58,7 @@ module buffer (
 );
 
     reg [551:0] shift_reg; // 336-bit shift register
-    reg [2:0]  shift_count; // Counter to manage shifts
+    reg [5:0]  shift_count; // Counter to manage shifts
 
     always @(posedge clk or posedge rst) begin
         if (rst) begin
@@ -36,7 +69,7 @@ module buffer (
             shift_reg <= data_in;
             shift_count <= 3'b0;
         end else if (shift) begin
-            if (shift_count < 31) begin
+            if (shift_count < 69) begin
                 shift_reg <= shift_reg >> 8; // Shift the register right by 8 bits
                 shift_count <= shift_count + 1;
             end
