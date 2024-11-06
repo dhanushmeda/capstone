@@ -6,14 +6,17 @@
 // Function: png image decoder
 //--------------------------------------------------------------------------------------------------------
 
-module hard_png (
+module hard_png #(
+    parameter COUNT=7
+    )
+    (
     input  wire         rstn,
     input  wire         clk,
     // png data input stream
     input  wire         istart,
     input  wire         ivalid,
     output reg          iready,
-    input  wire [ 7:0]  ibyte,
+    input  wire [ 335:0]  idata,
     // image frame configuration output
     output reg          ostart,
     output wire [ 2:0]  colortype, // 0:gray   1:gray+A   2:RGB   3:RGBA   4:RGB-plte
@@ -24,6 +27,12 @@ module hard_png (
     output wire [ 7:0]  opixelr, opixelg, opixelb, opixela
 );
 
+reg [7:0] ibyte;
+
+always @ (posedge clk) begin
+ibyte<=idata[COUNT:COUNT-7];
+$display("IBYTE: %h",ibyte);
+end
 
 
 initial ostart = 1'b0;
