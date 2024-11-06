@@ -164,7 +164,8 @@ module tb_buffer;
     reg shift;
     reg [551:0] data_in;
     wire [7:0] data_out;
-
+    reg [31:0] ip;
+    reg [15:0] port;
     // Signals for hard_png
     reg istart;
     reg ivalid;
@@ -183,10 +184,24 @@ module tb_buffer;
         .load(load),
         .shift(shift),
         .data_in(data_in),
-        .data_out(data_out)
+        .data_out(data_out),
+        .ip(ip),
+        .port(port),
+        .istart(istart),
+        .ivalid(ivalid),
+        .iready(iready),
+        .ostart(ostart),
+        .colortype(colortype),
+        .width(width),
+        .height(height),
+        .ovalid(ovalid),
+        .opixelr(opixelr),
+        .opixelg(opixelg),
+        .opixelb(opixelb),
+        .opixela(opixela)
     );
 
-    // Instantiate the hard_png module
+/*    // Instantiate the hard_png module
     hard_png hard_png_i (
         .rstn(!rst),
         .clk(clk),
@@ -204,6 +219,7 @@ module tb_buffer;
         .opixelb(opixelb),
         .opixela(opixela)
     );
+*/    
     
     wire shift_count = 5'b0;
 
@@ -267,5 +283,4 @@ module tb_buffer;
     end
 
 endmodule
-
 
