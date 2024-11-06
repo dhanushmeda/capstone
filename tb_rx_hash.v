@@ -25,7 +25,8 @@ module tb_rx_hash();
     wire data_last;
     wire clk_out;
     wire rst_out;
-
+    reg load;
+    wire load_out;
     // Instantiate the rx_hash module
     rx_hash #(
         .DATA_WIDTH(DATA_WIDTH),
@@ -43,6 +44,7 @@ module tb_rx_hash();
         .m_axis_hash_valid(m_axis_hash_valid),
         .m_axis_dest_ip(m_axis_dest_ip),
         .m_axis_dest_port(m_axis_dest_port),
+        .load(load),
         .data_out(data_out),
         .clk_out(clk_out),
         .rst_out(rst_out),
@@ -53,7 +55,24 @@ module tb_rx_hash();
 
     
     always #5 clk = ~clk; 
-
+    
+    initial begin
+    load=0;
+    #70
+    load=1;
+    #10
+    load=0;
+    #30
+    load=1;
+    #10
+    load=0;
+    #30
+    load=1;
+    #10
+    load=0;
+    end
+    
+    
     initial begin
         clk = 0;
         rst = 1;
@@ -61,7 +80,6 @@ module tb_rx_hash();
         s_axis_tkeep = 8'b0000000;
         s_axis_tvalid = 0;
         s_axis_tlast = 0;
-
         // Apply reset
         #20 rst = 0;
         
