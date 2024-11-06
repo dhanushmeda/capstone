@@ -13,7 +13,9 @@ module decision_making #
     input  wire [DATA_WIDTH-1:0]  data,
     input  wire [KEEP_WIDTH-1:0]  data_keep,
     input  wire                   data_valid,
-    input  wire                   data_last,   
+    input  wire                   data_last,
+    input wire load,
+    output wire load_out,   
     output reg  [DATA_WIDTH*3-433:0] data_out,
     output reg  [31:0]            dest_ip,
     output reg  [15:0]            dest_port,
@@ -35,20 +37,21 @@ module decision_making #
             decision <= 0;
             cycle_count <= 0;
         end else if (data_valid) begin
+            data_out<=0;
             case (cycle_count)
                 2'd0: packet_reg[DATA_WIDTH*3-1:DATA_WIDTH*2] <= data;
                 2'd1: packet_reg[DATA_WIDTH*2-1:DATA_WIDTH] <= data;
                 2'd2: packet_reg[DATA_WIDTH-1:0] <= data;
                 
             endcase
-            $display("PAcket at cycle %d is %h",cycle_count, packet_reg);
+            //$display("PAcket at cycle %d is %h",cycle_count, packet_reg);
             
 
             //cycle_count <= cycle_count + 1;
             //$display("Time: %0t | Cycle count: %d",$time,cycle_count);
             if (cycle_count == 3'd3 && data_last) begin
                 //packet_reg[DATA_WIDTH-1:0] <= data;
-                $display("Time: %0t | packet_reg = %h", $time, packet_reg);
+                //$display("Time: %0t | packet_reg = %h", $time, packet_reg);
                 dest_ip <= packet_reg[655:624];
                 dest_port <= packet_reg[495:480];
                 data_out <= packet_reg[335:0];
@@ -60,24 +63,25 @@ module decision_making #
                 cycle_count <= cycle_count + 1;
         end
     end
-
+    
+    
+    assign load_out = load;
     buffer buffer_inst (
         .clk(clk),
         .rst(rst),
+        .load(load_out),
         .data_in(decision ? data_out : 'bz),  
         .ip(decision ? dest_ip : 'bz),     
         .port(16'd21)                      
     );
 
-/*    host #(
-        .DATA_WIDTH(DATA_WIDTH)
-    ) host_inst (
+    host host_inst (
         .clk(clk),
         .rst(rst),
         .data(!decision ? data_out : 'bz), 
         .ip(!decision ? dest_ip : 'bz),    
         .port(!decision ? dest_port : 'bz) 
     );
-*/
+
 endmodule
 
