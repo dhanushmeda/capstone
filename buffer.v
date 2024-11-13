@@ -31,7 +31,7 @@ begin
 	end
 end*/
 
-module buffer (
+/*module buffer (
     input wire clk,
     input wire rst,
     input wire load,            // Signal to load the data
@@ -98,4 +98,70 @@ hard_png inst (
 	.opixelb(opixelb),
 	.opixela(opixela)	
 );
+endmodule
+*/
+
+module buffer (
+    input wire clk,
+    input wire rst,
+    input wire load,            // Signal to load the data
+    input wire shift,           // Signal to shift the data
+    input [31:0] ip,
+    input [15:0] port,
+    input wire [551:0] data_in, // 256-bit input data
+    output reg [7:0] data_out   // 8-bit output data
+    input wire istart,
+    input wire ivalid,
+    output reg iready,
+    output reg ostart,
+    output wire [ 2:0]  colortype, // 0:gray   1:gray+A   2:RGB   3:RGBA   4:RGB-plte
+    output wire [13:0]  width,     // image width
+    output wire [31:0]  height,    // image height
+    // pixel output
+    output reg          ovalid,
+    output wire [ 7:0]  opixelr, opixelg, opixelb, opixela
+);
+
+    reg [551:0] shift_reg; // 256-bit shift register
+    reg [6:0]  shift_count; // Counter to manage shifts
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            shift_reg <= 552'b0;
+            data_out <= 8'b0;
+            shift_count <= 7'b0;
+        end else if (load) begin
+            shift_reg <= data_in;
+            shift_count <= 7'b0;
+        end else if (shift) begin
+            if (shift_count < 69) begin
+                shift_reg <= shift_reg << 8; // Shift the register left by 8 bits
+                shift_count <= shift_count + 1;
+            end
+            data_out <= shift_reg[551:544]; // Output the highest 8 bits
+        end
+    end
+
+
+
+
+hard_png inst (
+	.clk(clk),
+	.rstn(rst),
+	.istart(istart),
+	.ivalid(ivalid),
+	.ibyte(data_out),
+	.iready(iready),
+        .ostart(ostart),
+        .colortype(colortype), 
+        .width(width),     
+        .height(height),    
+        .ovalid(ovalid),
+        .opixelr(opixelr),
+        .opixelg(opixelg), 
+        .opixelb(opixelb), 
+        .opixela(opixela)
+);
+	
+
 endmodule
