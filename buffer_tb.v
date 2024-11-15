@@ -153,7 +153,15 @@ endmodule
 */
 
 
+
 `timescale 1ns / 1ps
+
+
+`define START_NO  1       // first png file number to decode
+`define FINAL_NO  14      // last png file number to decode
+
+`define IN_PNG_FILE_FOMRAT    "test_image/img%02d.png"
+`define OUT_TXT_FILE_FORMAT   "out%02d.txt"
 
 module tb_buffer;
 
@@ -162,11 +170,10 @@ module tb_buffer;
     reg rst;
     reg load;
     reg shift;
-    reg [551:0] data_in;
-    wire [7:0] data_out;
     reg [31:0] ip;
     reg [15:0] port;
-    // Signals for hard_png
+    reg [551:0] data_in;
+    wire [7:0] data_out;
     reg istart;
     reg ivalid;
     wire iready;
@@ -177,16 +184,16 @@ module tb_buffer;
     wire ovalid;
     wire [7:0] opixelr, opixelg, opixelb, opixela;
 
-    // Instantiate the buffer module
+    // Instantiate the shift_register module
     buffer uut (
         .clk(clk),
         .rst(rst),
         .load(load),
+        .ip(ip),
+        .port(port),
         .shift(shift),
         .data_in(data_in),
         .data_out(data_out),
-        .ip(ip),
-        .port(port),
         .istart(istart),
         .ivalid(ivalid),
         .iready(iready),
@@ -200,28 +207,15 @@ module tb_buffer;
         .opixelb(opixelb),
         .opixela(opixela)
     );
-
-/*    // Instantiate the hard_png module
-    hard_png hard_png_i (
-        .rstn(!rst),
-        .clk(clk),
-        .istart(istart),
-        .ivalid(ivalid),
-        .iready(iready),
-        .ibyte(data_out),      // Connecting buffer's data_out to hard_png's ibyte
-        .ostart(ostart),
-        .colortype(colortype),
-        .width(width),
-        .height(height),
-        .ovalid(ovalid),
-        .opixelr(opixelr),
-        .opixelg(opixelg),
-        .opixelb(opixelb),
-        .opixela(opixela)
-    );
-*/    
-    
-    wire shift_count = 5'b0;
+    integer fptxt = 0, fppng = 0;
+    reg [256*8:1] fname_png;
+    reg [256*8:1] fname_txt;
+    integer png_no = 0;
+    integer txt_no = 0;
+    integer ii;
+    integer cyccnt = 0;
+    integer bytecnt = 0;
+    reg [6:0] shift_count=0;
 
     // Clock generation
     initial begin
@@ -232,55 +226,67 @@ module tb_buffer;
     // Test procedure
     initial begin
         // Initialize signals
-        rst = 1;
+        rst = 0;
         load = 0;
         shift = 0;
+        data_in = 552'h0;
         istart = 0;
         ivalid = 0;
-        data_in = 552'h0;
 
         // Apply reset
-        #20;
+        #10;
+        rst = 1;
+        #10;
         rst = 0;
+        
 
-        // Load data into buffer
+        // Load new data
         data_in = 552'h89504E470D0A1A0A0000000D4948445200000001000000010802000000907753DE0000000C4944415408D763F8CFC000000301010018DD8DB00000000049454E44AE426082;
         load = 1;
-        #10;
+        #20;
         load = 0;
-
-        // Start hard_png decoding
-        istart = 1;
-        #10;
-        istart = 0;
-
-        // Shift data from buffer to hard_png
+        #10
         while (shift_count < 69) begin
             @(posedge clk);
-            if (iready) begin
                 shift = 1;
+                #20
                 ivalid = 1;
-                #10;
-                //shift = 0;
+                
+               
                 $display("Time: %t, ibyte(data_out from buffer): %h", $time, data_out);
-            end else begin
-                ivalid = 0;
-            end
+                if( ivalid & iready ) begin
+                    $display("decoded data :%h",data_out); 
+                    bytecnt = bytecnt + 1;
+                end
+                shift = 0;
+                cyccnt = cyccnt + 1; 
+             shift_count = shift_count +1;
         end
         ivalid = 0;
+        
+        #20
+        $display("image decode done, input %d bytes in %d cycles, throughput=%f byte/cycle", bytecnt, cyccnt, (1.0*bytecnt)/cyccnt );
+        
+        
+       #750
+       $display("decode result:  colortype:%1d  width:%1d  height:%1d bit depth:08\n", colortype, width, height);
 
-        // Wait for decoding to finish
-        wait (ovalid);
-        $display("Decode complete: colortype=%0d, width=%0d, height=%0d", colortype, width, height);
-
-        #100;
+        // Apply reset and check the output
+        #10;
+        rst = 1;
+        #10;
+        rst = 0;
+        $display("Time: %t, data_out after reset: %h", $time, data_out); // Expect 8'h0
+	
+        // Finish simulation
         $finish;
     end
+     initial begin
+      $dumpfile("test.vcd");
+      $dumpvars(0,tb_buffer);
+     end
 
-    initial begin
-        $dumpfile("tb_buffer.vcd");
-        $dumpvars(0, tb_buffer);
-    end
 
 endmodule
+
 
