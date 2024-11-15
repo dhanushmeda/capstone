@@ -109,16 +109,16 @@ module buffer (
     input [31:0] ip,
     input [15:0] port,
     input wire [551:0] data_in, // 256-bit input data
-    output reg [7:0] data_out   // 8-bit output data
+    output reg [7:0] data_out,   // 8-bit output data
     input wire istart,
     input wire ivalid,
-    output reg iready,
-    output reg ostart,
+    output wire iready,
+    output wire ostart,
     output wire [ 2:0]  colortype, // 0:gray   1:gray+A   2:RGB   3:RGBA   4:RGB-plte
     output wire [13:0]  width,     // image width
     output wire [31:0]  height,    // image height
     // pixel output
-    output reg          ovalid,
+    output wire          ovalid,
     output wire [ 7:0]  opixelr, opixelg, opixelb, opixela
 );
 
@@ -133,12 +133,15 @@ module buffer (
         end else if (load) begin
             shift_reg <= data_in;
             shift_count <= 7'b0;
+            $display("shift reg %h",shift_reg);
+            
         end else if (shift) begin
             if (shift_count < 69) begin
                 shift_reg <= shift_reg << 8; // Shift the register left by 8 bits
                 shift_count <= shift_count + 1;
             end
             data_out <= shift_reg[551:544]; // Output the highest 8 bits
+            $display("data out %d",data_out);
         end
     end
 
